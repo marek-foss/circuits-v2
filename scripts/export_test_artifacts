@@ -7,6 +7,8 @@ const circuitConfigs = require("../lib/circuitConfigs_native.js");
 const {
   pathExists,
   circuitConfigToName,
+  circuitCPPName,
+  cliArguments,
   runWorker,
   processParallel,
   run,
@@ -20,7 +22,11 @@ const PACKAGE_TMP_WORKING = path.join(EXPORT_DIR, "package-tmp");
 const PACKAGE_DIR = path.join(EXPORT_DIR, "package");
 const PROVER_DIR = path.join(EXPORT_DIR, "prover");
 const BUILD_DIR = path.join(__dirname, "../build");
-
+const SEED_DIR = path.join(EXPORT_DIR, "build-artifacts");
+const CIRCUIT_UPGRADE_DIR = path.join(
+  EXPORT_DIR,
+  "native-prover-circuit-updates"
+);
 async function main() {
   // Check if ceremony export exists
   if (!pathExists(CEREMONY_EXPORT)) {
@@ -39,8 +45,26 @@ async function main() {
 
   // Loop through each circuit and assemble compression tasks
   const compressionQueue = [];
+  const generationQueue = [];
+
+  if (!pathExists(SEED_DIR)) await fs.mkdir(SEED_DIR);
+  if (!pathExists(CIRCUIT_UPGRADE_DIR)) await fs.mkdir(CIRCUIT_UPGRADE_DIR);
+
   for (const circuitConfig of circuitConfigs) {
     const name = circuitConfigToName(circuitConfig);
+    const cppName = circuitCPPName(circuitConfig);
+    const zkey = path.join(CEREMONY_EXPORT, `${name}.zkey`);
+    const vkey = path.join(SEED_DIR, `${name}.vkey`);
+    const dat = path.join(BUILD_DIR, `${name}_cpp`, `${name}.dat`);
+    const circuitCPP = path.join(BUILD_DIR, `${name}_cpp`, `${name}.cpp`);
+    const wasm = path.join(BUILD_DIR, `${name}_js`, `${name}.wasm`);
+
+    const circuitCPPDest = path.join(
+      CIRCUIT_UPGRADE_DIR,
+      `${cppName}_circuit.cpp`
+    );
+    const datDest = path.join(SEED_DIR, `${name}.dat`);
+    const wasmDest = path.join(SEED_DIR, `${name}.wasm`);
 
     // Add zkey file compression to queue
     compressionQueue.push(() => {
@@ -77,10 +101,38 @@ async function main() {
         }
       );
     });
+
+    // Add dat file generation to queue
+    generationQueue.push(async () => {
+      console.log(`Generating ${name}.vkey`);
+      const result = await runWorker.parent(
+        path.join(__dirname, "child_process/vkey_create.js"),
+        {
+          zkey,
+          print: cliArguments()["verbose"],
+        }
+      );
+      await fs.writeFile(vkey, result);
+      await fs.copyFile(dat, datDest);
+      await fs.copyFile(wasm, wasmDest);
+    });
+
+    generationQueue.push(() => {
+      console.log(`Generating joinsplit_${name}.cpp`);
+      return runWorker.parent(
+        path.join(__dirname, "child_process/rebuild_cpp_circuit.js"),
+        {
+          name: cppName,
+          source: circuitCPP,
+          destination: circuitCPPDest,
+        }
+      );
+    });
   }
 
   console.log("\nCOMPRESSING FILES");
   await processParallel(compressionQueue);
+  await processParallel(generationQueue);
 
   // Copy package template
   console.log("\nCOPYING PACKAGE TEMPLATE TO EXPORT DIRECTORY");
@@ -116,7 +168,7 @@ async function main() {
       path.join(PACKAGE_TMP_WORKING, "circuits", name, "zkey.br")
     );
     await fs.cp(
-      path.join(CEREMONY_EXPORT, `${name}.vkey`),
+      path.join(SEED_DIR, `${name}.vkey`),
       path.join(PACKAGE_TMP_WORKING, "circuits", name, "vkey.json")
     );
     await fs.cp(

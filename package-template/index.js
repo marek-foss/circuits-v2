@@ -20,6 +20,16 @@ function getArtifact(nullifiers, commitments) {
 
   if (!cache[nullifiers][commitments]) {
     cache[nullifiers][commitments] = {
+      dat: zlib.brotliDecompressSync(
+        fs.readFileSync(
+          path.join(
+            __dirname,
+            "circuits",
+            circuitConfigToName({ nullifiers, commitments }),
+            "native.br"
+          )
+        )
+      ),
       zkey: zlib.brotliDecompressSync(
         fs.readFileSync(
           path.join(

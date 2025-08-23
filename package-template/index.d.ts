@@ -14,6 +14,7 @@ export interface VKey {
 }
 
 export interface Artifact {
+  dat: Uint8Array;
   zkey: Uint8Array;
   wasm: Uint8Array;
   vkey: VKey;

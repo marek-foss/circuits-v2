@@ -2,6 +2,7 @@
 /build
 /bin
 /zkeys
+/native-prover-circuit-updates
 /src/generated
-/export
+/export*
 /ceremony-export

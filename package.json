@@ -12,7 +12,8 @@
     "check": "npm run prebuild; ./scripts/check_circuits",
     "clean": "./scripts/clean",
     "ceremony": "npm run build; ./scripts/prepare_ceremony --verbose",
-    "export": "npm run build; ./scripts/export"
+    "export": "npm run build; ./scripts/export",
+    "export:native": "npm run build; ./scripts/export_test_artifacts"
   },
   "dependencies": {
     "circomlib": "2.0.5"

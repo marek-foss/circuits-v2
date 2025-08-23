@@ -8,6 +8,10 @@ const CIRCOM_INSTALL_DIR = path.join(__dirname, "../bin");
 const GENERATED_CIRCUITS_DIR = path.join(__dirname, "../src/generated");
 const BUILD_DIR = path.join(__dirname, "../build");
 const CEREMONY_SEED_DIR = path.join(__dirname, "../zkeys");
+const CEREMONY_CIRCUITS_DIR = path.join(
+  __dirname,
+  "../native-prover-circuit-updates"
+);
 const CEREMONY_EXPORT = path.join(__dirname, "../ceremony-export");
 
 async function main() {
@@ -19,6 +23,8 @@ async function main() {
     await fs.rm(BUILD_DIR, { recursive: true, force: true });
   if (pathExists(CEREMONY_SEED_DIR))
     await fs.rm(CEREMONY_SEED_DIR, { recursive: true, force: true });
+  if (pathExists(CEREMONY_CIRCUITS_DIR))
+    await fs.rm(CEREMONY_CIRCUITS_DIR, { recursive: true, force: true });
   if (pathExists(CEREMONY_EXPORT))
     console.log(
       `Not clearing ${CEREMONY_EXPORT} to prevent data loss is it cannot be regenerated from just this package. Manually remove folder if desired.`
