@@ -2,7 +2,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 // const circuitConfigs = require("../lib/circuitConfigs.js");
-const circuitConfigs = require("../lib/circuitConfigs_native.js");
+const circuitConfigs = require("../lib/circuitConfigs.js");
 
 const {
   pathExists,
@@ -15,7 +15,7 @@ const {
 } = require("../lib/shared.js");
 
 // Constants
-const CEREMONY_EXPORT = path.join(__dirname, "../zkeys");
+const CEREMONY_EXPORT = path.join(__dirname, "../ceremony-export");
 const PACKAGE_TEMPLATE = path.join(__dirname, "../package-template");
 const EXPORT_DIR = path.join(__dirname, "../export-test");
 const PACKAGE_TMP_WORKING = path.join(EXPORT_DIR, "package-tmp");
@@ -53,7 +53,7 @@ async function main() {
   for (const circuitConfig of circuitConfigs) {
     const name = circuitConfigToName(circuitConfig);
     const cppName = circuitCPPName(circuitConfig);
-    const zkey = path.join(CEREMONY_EXPORT, `${name}.zkey`);
+    const zkey = path.join(CEREMONY_EXPORT, "zkeys", `${name}.zkey`);
     const vkey = path.join(SEED_DIR, `${name}.vkey`);
     const dat = path.join(BUILD_DIR, `${name}_cpp`, `${name}.dat`);
     const circuitCPP = path.join(BUILD_DIR, `${name}_cpp`, `${name}.cpp`);
@@ -69,10 +69,11 @@ async function main() {
     // Add zkey file compression to queue
     compressionQueue.push(() => {
       console.log(`Compressing ${name}.zkey`);
+      console.log(zkey);
       return runWorker.parent(
         path.join(__dirname, "child_process/compress_file.js"),
         {
-          source: path.join(CEREMONY_EXPORT, `${name}.zkey`),
+          source: zkey,
           destination: path.join(PROVER_DIR, `snarkjs/${name}.zkey.br`),
         }
       );
@@ -124,6 +125,7 @@ async function main() {
         {
           name: cppName,
           source: circuitCPP,
+          upgradeDir: CIRCUIT_UPGRADE_DIR,
           destination: circuitCPPDest,
         }
       );
