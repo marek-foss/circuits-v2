@@ -18,9 +18,12 @@
     "circomlib": "2.0.5"
   },
   "devDependencies": {
+    "big-integer": "^1.6.52",
     "circom_tester": "0.0.24",
+    "circomlibjs": "^0.0.8",
     "minimist": "^1.2.8",
-    "mocha": "^11.6.0"
+    "mocha": "^11.6.0",
+    "snarkjs": "^0.7.5"
   },
   "repository": {
     "type": "git",

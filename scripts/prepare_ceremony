@@ -38,8 +38,8 @@ async function main() {
     process.exit();
   }
 
-  // Download ptau file if not exist (always download if force flag set)
-  if (!pathExists(POT_PATH) || cliArguments()["force"]) {
+  // Download ptau file if not exist
+  if (!pathExists(POT_PATH))// || cliArguments()["force"]) {
     console.log("Download powers of tau phase 1");
     await run(
       `curl`,
@@ -59,6 +59,7 @@ async function main() {
     // Get paths
     const r1cs = path.join(BUILD_DIR, `${name}.r1cs`);
     const zkey = path.join(SEED_DIR, `${name}.zkey`);
+    const vkey = path.join(SEED_DIR, `${name}.vkey.json`);
 
     // Generate zkey if not exist (always generate if force flag set)
     if (!pathExists(zkey) || cliArguments()["force"]) {
@@ -75,6 +76,22 @@ async function main() {
       console.log(`${name}.zkey generated`);
     } else {
       console.log(`${name}.zkey already exists`);
+    }
+
+    // Generate vkey if not exist (always generate if force flag set)
+    if (!pathExists(vkey) || cliArguments()["force"]) {
+      console.log(`Generating ${name}.vkey.json`);
+      const vkeyJson = await runWorker.parent(
+        path.join(__dirname, "child_process/vkey_create.js"),
+        {
+          zkey,
+          print: cliArguments()["verbose"],
+        }
+      );
+      await fs.writeFile(vkey, vkeyJson);
+      console.log(`${name}.vkey.json generated`);
+    } else {
+      console.log(`${name}.vkey.json already exists`);
     }
   });
 
