@@ -18,6 +18,7 @@ template JoinSplit(nInputs, nOutputs, MerkleTreeDepth) {
     signal input signature[3]; // EDDSA signature (R, s) where R is a point (x,y) and s is a scalar
     signal input randomIn[nInputs];
     signal input valueIn[nInputs];
+    signal input customPointer[nInputs]; // Custom data in input note commitment
     signal input pathElements[nInputs][MerkleTreeDepth]; // Merkle proofs of membership
     signal input leavesIndices[nInputs];
     signal input nullifyingKey;
@@ -82,10 +83,11 @@ template JoinSplit(nInputs, nOutputs, MerkleTreeDepth) {
         npkIn[i].inputs[0] <== mpk.out;
         npkIn[i].inputs[1] <== randomIn[i];
         // Compute note commitment
-        noteCommitmentsIn[i] = Poseidon(3);
+        noteCommitmentsIn[i] = Poseidon(4);
         noteCommitmentsIn[i].inputs[0] <== npkIn[i].out;
         noteCommitmentsIn[i].inputs[1] <== token;
         noteCommitmentsIn[i].inputs[2] <== valueIn[i];
+        noteCommitmentsIn[i].inputs[3] <== customPointer[i];
 
         merkleVerifier[i] = MerkleProofVerifier(MerkleTreeDepth);
         merkleVerifier[i].leaf <== noteCommitmentsIn[i].out;

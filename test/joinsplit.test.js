@@ -21,6 +21,7 @@ function formatCircuitInputs(inputs) {
     nullifyingKey: toBigInt(inputs.nullifyingKey),
     npkOut: inputs.npkOut.map(toBigInt),
     valueOut: inputs.valueOut.map(toBigInt),
+    customPointer: inputs.customPointer.map(toBigInt),
   };
 }
 
@@ -129,6 +130,17 @@ describe("Joinsplit", () => {
           valueIn: [
             ...originalInputs.valueIn.slice(0, -1),
             originalInputs.valueIn.at(-1) + 1n,
+          ],
+        };
+        await assert.rejects(() => circuit.calculateWitness(mutated));
+      });
+
+      it("Should fail when customPointer is incorrect", async () => {
+        const mutated = {
+          ...originalInputs,
+          customPointer: [
+            ...originalInputs.customPointer.slice(0, -1),
+            originalInputs.customPointer.at(-1) + 1n,
           ],
         };
         await assert.rejects(() => circuit.calculateWitness(mutated));
