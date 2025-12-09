@@ -6,18 +6,16 @@ rm -rf node_modules
 npm install
 
 # Remove generated assets before rebuilding everything.
-npm run clean
+./scripts/clean
 
 # Recreate the toolchain and artifacts with fresh outputs.
-./scripts/fetch_circom --force
+./scripts/fetch_circom --verbose --force
 ./scripts/generate_circuits
 ./scripts/compile_circuits --force
 
 # Retrieve and verify the artifacts.
+./scripts/check_circuits
 npm test
-npm run check
 
-# Rebuild the artifacts.
-#npm run build
-#./scripts/prepare_ceremony --force
-#npm run export
+# Rebuild and export the artifacts.
+./scripts/prepare_ceremony --force
